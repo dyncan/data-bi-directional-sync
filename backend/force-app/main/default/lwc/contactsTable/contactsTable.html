@@ -1,0 +1,85 @@
+<!-- sldsValidatorIgnore -->
+<template>
+    <lightning-card title="Contact Datatable Example" icon-name="standard:contact">
+        <lightning-button label="Add Row" slot="actions" icon-name="utility:add" onclick={addRow}></lightning-button>
+        <div class="slds-m-around_medium">
+            <template lwc:if={isLoading}>
+                <lightning-spinner alternative-text="Loading" variant="brand" size="small">
+                </lightning-spinner>
+            </template>
+            <template lwc:if={shouldDisplayRow}>
+                <table class="slds-table slds-table_cell-buffer slds-table_bordered"
+                    aria-labelledby="element-with-table-label other-element-with-table-label">
+                    <thead>
+                        <tr class="slds-line-height_reset">
+                            <th class="" scope="col">
+                                <div class="slds-truncate" title="First Name">First Name</div>
+                            </th>
+                            <th class="" scope="col">
+                                <div class="slds-truncate" title="Last Name">Last Name</div>
+                            </th>
+                            <th class="" scope="col">
+                                <div class="slds-truncate" title="Title">Title</div>
+                            </th>
+                            <th class="" scope="col">
+                                <div class="slds-truncate" title="Email">Email</div>
+                            </th>
+                            <th class="" scope="col">
+                                <div class="slds-truncate" title="Stage">Action</div>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template for:each={records} for:item="obj">
+                            <tr class="inputRows" key={obj.Id}>
+                                <td data-label="First Name" scope="row">
+                                    <lightning-input class="fields" variant="label-hidden" label="First Name"
+                                        name="FirstName" value={obj.FirstName} data-row-id={obj.Id}
+                                        onchange={updateValues}></lightning-input>
+                                </td>
+                                <td data-label="Last Name">
+                                    <lightning-input class="fields" variant="label-hidden" label="Last Name"
+                                        name="LastName" value={obj.LastName} data-row-id={obj.Id}
+                                        onchange={updateValues}></lightning-input>
+                                </td>
+                                <td data-label="Title">
+                                    <lightning-input class="fields" variant="label-hidden" label="Title" name="Title"
+                                        value={obj.Title} data-row-id={obj.Id}
+                                        onchange={updateValues}></lightning-input>
+                                </td>
+                                <td data-label="Email">
+                                    <lightning-input type="email" class="fields" variant="label-hidden" label="Email"
+                                        name="Email" value={obj.Email} data-row-id={obj.Id}
+                                        onchange={updateValues}></lightning-input>
+                                </td>
+                                <td data-label="Button">
+                                    <lightning-button-icon icon-name="action:delete" alternative-text="Delete"
+                                        title="Delete" data-row-id={obj.Id}
+                                        onclick={handleDelete}></lightning-button-icon>
+                                </td>
+                            </tr>
+
+                        </template>
+                    </tbody>
+                </table>
+
+                <div slot="footer" class="slds-align_absolute-center slds-m-top_small">
+                    <lightning-button variant="neutral" label="Cancel" onclick={clearAction}></lightning-button> &nbsp;
+                    <lightning-button variant="brand" label="Save" onclick={handleCreate}
+                        disabled={isDisable}></lightning-button>
+                </div>
+            </template>
+        </div>
+
+        <div class="slds-m-around_medium">
+            <template lwc:if={contacts.data}>
+                <lightning-datatable key-field="Id" data={contacts.data} columns={columns} onsave={handleSave}
+                    draft-values={draftValues}>
+                </lightning-datatable>
+            </template>
+            <template lwc:if={contacts.error}>
+                <!-- handle Apex error -->
+            </template>
+        </div>
+    </lightning-card>
+</template>
