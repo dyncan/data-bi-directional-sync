@@ -2,6 +2,8 @@
 <template>
     <lightning-card title="Contact Datatable Example" icon-name="standard:contact">
         <lightning-button label="Add Row" slot="actions" icon-name="utility:add" onclick={addRow}></lightning-button>
+        <lightning-button label="Delete Selected Rows" slot="actions" icon-name="utility:delete"
+            onclick={handleDeleteRows}></lightning-button>
         <div class="slds-m-around_medium">
             <template lwc:if={isLoading}>
                 <lightning-spinner alternative-text="Loading" variant="brand" size="small">
@@ -55,7 +57,7 @@
                                 <td data-label="Button">
                                     <lightning-button-icon icon-name="action:delete" alternative-text="Delete"
                                         title="Delete" data-row-id={obj.Id}
-                                        onclick={handleDelete}></lightning-button-icon>
+                                        onclick={handleDeleteRow}></lightning-button-icon>
                                 </td>
                             </tr>
 
@@ -73,8 +75,8 @@
 
         <div class="slds-m-around_medium">
             <template lwc:if={contacts.data}>
-                <lightning-datatable key-field="Id" data={contacts.data} columns={columns} onsave={handleSave}
-                    draft-values={draftValues}>
+                <lightning-datatable key-field="Id" data={contacts.data} columns={columns}
+                    onrowselection={getSelectedRecords} onsave={handleSave} draft-values={draftValues}>
                 </lightning-datatable>
             </template>
             <template lwc:if={contacts.error}>

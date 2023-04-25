@@ -1,8 +1,11 @@
 import { LightningElement, wire, api, track } from "lwc";
 import getContacts from "@salesforce/apex/ContactController.getContacts";
 import { refreshApex } from "@salesforce/apex";
-import { createRecord, updateRecord } from "lightning/uiRecordApi";
-
+import {
+  createRecord,
+  updateRecord,
+  deleteRecord
+} from "lightning/uiRecordApi";
 import { ShowToastEvent } from "lightning/platformShowToastEvent";
 import FIRST_NAME_FIELD from "@salesforce/schema/Contact.FirstName";
 import LAST_NAME_FIELD from "@salesforce/schema/Contact.LastName";
@@ -11,6 +14,7 @@ import PHONE_FIELD from "@salesforce/schema/Contact.Phone";
 import EMAIL_FIELD from "@salesforce/schema/Contact.Email";
 import STATUS_FIELD from "@salesforce/schema/Contact.Status__c";
 
+// Define constants
 const COLS = [
   {
     label: "First Name",
@@ -41,23 +45,27 @@ const COLS = [
     editable: true
   }
 ];
+
 export default class ContactsTable extends LightningElement {
   @api recordId;
+  @track records = [];
+  selectedIds = [];
+  isLoading = false;
+
   columns = COLS;
   draftValues = [];
-  @track records = [];
-  isLoading = false;
 
   @wire(getContacts, { accId: "$recordId" })
   contacts;
 
+  // Computed property to determine if rows should be displayed
   get shouldDisplayRow() {
     return this.records.length > 0;
   }
 
-  //to add row
+  // Add row to the table
   addRow() {
-    let myNewElement = {
+    let myNewRow = {
       Id: this.records.length + 1,
       Email: "",
       FirstName: "",
@@ -66,10 +74,11 @@ export default class ContactsTable extends LightningElement {
       Status__c: "",
       AccountId: this.recordId
     };
-    this.records = [...this.records, myNewElement];
+    this.records = [...this.records, myNewRow];
   }
 
-  handleDelete(event) {
+  // Handle delete row from table
+  handleDeleteRow(event) {
     // Find the row to delete
     const rowIndexToRemove = this.records.findIndex(
       (row) => row.Id == event.target.dataset.rowId
@@ -88,33 +97,33 @@ export default class ContactsTable extends LightningElement {
     recordToUpdate[event.target.name] = event.target.value;
   }
 
-  clearAction() {
-    this.records = [];
-    this.addRow();
+  // Get selected rows from datatable
+  getSelectedRecords(event) {
+    const selectedRows = event.detail.selectedRows;
+    this.selectedIds = selectedRows.map((row) => row.Id);
   }
 
-  async handleCreate() {
+  // Handle delete rows from datatable
+  async handleDeleteRows() {
     try {
       this.isLoading = true;
-      // // Create all records in parallel by UI API
-      const promises = this.records.map(({ Id, ...rest }) => {
-        const fields = { ...rest };
-        const recordInput = { apiName: "Contact", fields };
-        return createRecord(recordInput);
+
+      // Use Promise.all to delete all selected rows in parallel
+      const promises = this.selectedIds.map((Id) => {
+        return deleteRecord(Id);
       });
 
       await Promise.all(promises);
 
-      // Report success with a toast
       this._handleToastEvent(
         "Success",
         "All Contacts created successfully",
         "success"
       );
 
-      this.clearAction();
       // Display fresh data in the datatable
       await refreshApex(this.contacts);
+      this.selectedIds = [];
     } catch (error) {
       this._handleToastEvent(
         "Error updating or reloading contacts",
@@ -126,6 +135,48 @@ export default class ContactsTable extends LightningElement {
     }
   }
 
+  // clear all rows from the table
+  clearAction() {
+    this.records = [];
+    this.addRow();
+  }
+
+  // Handle create new contact(s)
+  async handleCreate() {
+    try {
+      this.isLoading = true;
+
+      // Use Promise.all to create all records in parallel
+      const promises = this.records.map(({ Id, ...rest }) => {
+        const fields = { ...rest };
+        const recordInput = { apiName: "Contact", fields };
+        return createRecord(recordInput);
+      });
+
+      await Promise.all(promises);
+
+      this._handleToastEvent(
+        "Success",
+        "All Contacts created successfully",
+        "success"
+      );
+
+      // Clear all rows from the datatable and rerender datatable
+      this.clearAction();
+      await refreshApex(this.contacts);
+    } catch (error) {
+      // Report error with a toast
+      this._handleToastEvent(
+        "Error creating contacts",
+        error.body.message,
+        "error"
+      );
+    } finally {
+      this.isLoading = false;
+    }
+  }
+
+  // Handle save changes to existing contact(s)
   async handleSave(event) {
     // Convert datatable draft values into record objects
     const records = event.detail.draftValues.slice().map((draftValue) => {
@@ -137,7 +188,7 @@ export default class ContactsTable extends LightningElement {
     this.draftValues = [];
 
     try {
-      // Update all records in parallel thanks to the UI API
+      // Use Promise.all to update all records in parallel
       const recordUpdatePromises = records.map((record) =>
         updateRecord(record)
       );
@@ -146,9 +197,10 @@ export default class ContactsTable extends LightningElement {
       // Report success with a toast
       this._handleToastEvent("Success", "Contacts updated", "success");
 
-      // Display fresh data in the datatable
+      // Display fresh data in the table
       await refreshApex(this.contacts);
     } catch (error) {
+      // Report error with a toast
       this._handleToastEvent(
         "Error updating or reloading contacts",
         error.body.message,
@@ -157,6 +209,7 @@ export default class ContactsTable extends LightningElement {
     }
   }
 
+  // Private method to handle toast event
   _handleToastEvent(title, message, variant) {
     this.dispatchEvent(
       new ShowToastEvent({
