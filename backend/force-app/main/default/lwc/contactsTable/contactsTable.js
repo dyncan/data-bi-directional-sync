@@ -71,7 +71,7 @@ export default class ContactsTable extends LightningElement {
       FirstName: "",
       LastName: "",
       Phone: "",
-      Status__c: "",
+      Status__c: "New",
       AccountId: this.recordId
     };
     this.records = [...this.records, myNewRow];
@@ -117,7 +117,7 @@ export default class ContactsTable extends LightningElement {
 
       this._handleToastEvent(
         "Success",
-        "All Contacts created successfully",
+        "All Contacts deleted successfully",
         "success"
       );
 
@@ -126,7 +126,7 @@ export default class ContactsTable extends LightningElement {
       this.selectedIds = [];
     } catch (error) {
       this._handleToastEvent(
-        "Error updating or reloading contacts",
+        "Error deleting contacts",
         error.body.message,
         "error"
       );
@@ -195,7 +195,11 @@ export default class ContactsTable extends LightningElement {
       await Promise.all(recordUpdatePromises);
 
       // Report success with a toast
-      this._handleToastEvent("Success", "Contacts updated", "success");
+      this._handleToastEvent(
+        "Success",
+        "Contacts updated successfully",
+        "success"
+      );
 
       // Display fresh data in the table
       await refreshApex(this.contacts);

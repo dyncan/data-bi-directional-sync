@@ -27,6 +27,9 @@
                                 <div class="slds-truncate" title="Email">Email</div>
                             </th>
                             <th class="" scope="col">
+                                <div class="slds-truncate" title="Phone">Phone</div>
+                            </th>
+                            <th class="" scope="col">
                                 <div class="slds-truncate" title="Stage">Action</div>
                             </th>
                         </tr>
@@ -51,7 +54,13 @@
                                 </td>
                                 <td data-label="Email">
                                     <lightning-input type="email" class="fields" variant="label-hidden" label="Email"
-                                        name="Email" value={obj.Email} data-row-id={obj.Id}
+                                        name="Email" value={obj.Email} placeholder="*@example.com" data-row-id={obj.Id}
+                                        onchange={updateValues}></lightning-input>
+                                </td>
+                                <td data-label="Phone">
+                                    <lightning-input type="tel" class="fields" variant="label-hidden" label="Phone"
+                                        name="Phone" value={obj.Phone} placeholder="555-555-5555"
+                                        pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}" data-row-id={obj.Id}
                                         onchange={updateValues}></lightning-input>
                                 </td>
                                 <td data-label="Button">
