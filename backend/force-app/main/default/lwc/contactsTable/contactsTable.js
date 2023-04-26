@@ -1,6 +1,5 @@
 import { LightningElement, wire, api, track } from "lwc";
 import getContacts from "@salesforce/apex/ContactController.getContacts";
-import createContact from "@salesforce/apex/ContactController.createContact";
 import { refreshApex } from "@salesforce/apex";
 import {
   createRecord,
@@ -90,41 +89,25 @@ export default class ContactsTable extends LightningElement {
 
     // Subscribe to Manufacturing Event plaform event
     try {
-      this.subscription = await subscribe(CONTACT_PE_CHANNEL, -1, (event) => {
-        console.log(event.data);
-        if (event.data.payload) {
-          let contactInfo = {
-            Email: "",
-            Phone: "",
-            FirstName: event.data.payload.FirstName__c,
-            LastName: event.data.payload.LastName__c,
-            Status__c: event.data.payload.Status__c,
-            AccountId: this.recordId
+      this.subscription = await subscribe(
+        CONTACT_PE_CHANNEL,
+        -1,
+        async (event) => {
+          console.log(event.data.payload);
+          const fields = {
+            Id: event.data.payload.Contact_Id__c
           };
-          createContact({ contactJSON: JSON.stringify(contactInfo) })
-            .then((result) => {
-              // Show a success message to the user
-              this.dispatchEvent(
-                new ShowToastEvent({
-                  title: "Success",
-                  message: "Contact created successfully",
-                  variant: "success"
-                })
-              );
-              refreshApex(this.contacts);
-            })
-            .catch((error) => {
-              // Show an error message to the user
-              this.dispatchEvent(
-                new ShowToastEvent({
-                  title: "Error",
-                  message: error.body.message,
-                  variant: "error"
-                })
-              );
-            });
+          fields["Status__c"] = event.data.payload.Status__c;
+          const recordInput = { fields };
+          // Update record
+          try {
+            updateRecord(recordInput);
+            await refreshApex(this.contacts);
+          } catch (error) {
+            console.log(error);
+          }
         }
-      });
+      );
     } catch (error) {
       console.log("API error", error);
     }
@@ -220,14 +203,14 @@ export default class ContactsTable extends LightningElement {
       this.isLoading = true;
 
       // Use Promise.all to create all records in parallel
-      // const promises = this.records.map(({ Id, ...rest }) => {
-      //   const fields = { ...rest };
-      //   const recordInput = { apiName: "Contact", fields };
-      //   console.log(JSON.stringify(recordInput));
-      //   return createRecord(recordInput);
-      // });
+      const promises = this.records.map(({ Id, ...rest }) => {
+        const fields = { ...rest };
+        const recordInput = { apiName: "Contact", fields };
+        console.log(JSON.stringify(recordInput));
+        return createRecord(recordInput);
+      });
 
-      // await Promise.all(promises);
+      await Promise.all(promises);
 
       this._handleToastEvent(
         "Success",
