@@ -19,11 +19,4 @@ public with sharing class ContactController {
       LIMIT 100
     ];
   }
-
-  @AuraEnabled(Cacheable=false)
-  public static void createContact(String contactJSON) {
-    System.debug(contactJSON);
-    Contact newContact = (Contact) JSON.deserialize(contactJSON, Contact.class);
-    Database.insert(newContact, true);
-  }
 }
