@@ -3,7 +3,6 @@ import LoginPanel from "./LoginPanel.js";
 import LogoutPanel from "./LogoutPanel.js";
 import Spinner from "./Spinner.js";
 import ContactList from "./Contacts.js";
-import CreateContact from "./CreateContact.js";
 import { WebSocketClient } from "./webSocketClient.js";
 
 const WHOAMI_URL = "/auth/whoami";
@@ -59,15 +58,18 @@ export default function App() {
     }
 
     fetchData();
-    wsConnect();
   }, []);
+
+  useEffect(() => {
+    if (!wsRef) {
+      wsConnect();
+    }
+  }, [wsRef]);
 
   const wsConnect = () => {
     const wsRef = new WebSocketClient(WS_URL);
-    setWsRef(wsRef);
     wsRef.connect();
     wsRef.addMessageListener(async (message) => {
-      console.log("useEffect OUTPUT : ", message);
       if (message?.type === "statusEvent") {
         const { contactId, status } = message.data ?? {};
         const response = await fetchContact(contactId);
@@ -84,6 +86,7 @@ export default function App() {
         }
       }
     });
+    setWsRef(wsRef);
   };
 
   const fetchCurrentUser = async () =>
@@ -106,7 +109,7 @@ export default function App() {
     return response.json();
   };
 
-  const handleFormSubmit = (formData) => {
+  const handleStatusChange = (formData) => {
     formData.userId = user.user_id;
     const eventData = {
       type: "statusEvent",
@@ -124,8 +127,10 @@ export default function App() {
           Logged in as{" "}
           <span style={{ fontWeight: "bold" }}>{user.username}</span>!{" "}
           <LogoutPanel />
-          <ContactList contactList={contactList} />
-          <CreateContact onFormSubmit={handleFormSubmit} />
+          <ContactList
+            contactList={contactList}
+            onStatusChange={handleStatusChange}
+          />
         </div>
       )}
       {isLoading && <Spinner />}

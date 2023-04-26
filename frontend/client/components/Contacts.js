@@ -1,8 +1,17 @@
 import React from "react";
 
 const Contacts = (props) => {
+  const handleStatusChange = (event, item) => {
+    const statusValue = event.target.value;
+    const changeData = {
+      contactId: item.Id,
+      status: statusValue,
+    };
+    props.onStatusChange(changeData);
+  };
+
   return (
-    <article className="slds-card" style={{ width: "32%", margin: "2rem" }}>
+    <article className="slds-card" style={{ width: "100%", margin: "2rem" }}>
       <div className="slds-card__header slds-grid">
         <header className="slds-media slds-media_center slds-has-flexi-truncate">
           <div className="slds-media__figure">
@@ -75,7 +84,15 @@ const Contacts = (props) => {
                 </td>
                 <td data-label="Status">
                   <div className="slds-truncate" title={item.Status__c}>
-                    {item.Status__c}
+                    <input
+                      type="text"
+                      id="status"
+                      name="status__c"
+                      defaultValue={item.Status__c}
+                      onBlur={(event) => handleStatusChange(event, item)}
+                      placeholder="Placeholder text…"
+                      className="slds-input"
+                    />
                   </div>
                 </td>
               </tr>

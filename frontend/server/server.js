@@ -202,7 +202,7 @@ async function pubSubConnect(conn, userInfo) {
   // Subscribe to Change Data Capture events on Reseller Order records
   const contactCdcEmitter = await pubSubClient.subscribe(
     "/data/ContactChangeEvent",
-    1
+    10
   );
 
   contactCdcEmitter.on("data", (cdcEvent) => {
@@ -226,15 +226,15 @@ async function pubSubConnect(conn, userInfo) {
 
   // Handle incoming WS events
   wss.addMessageListener(async (message) => {
-    const { firstName, lastName, status__c, userId } = message.data;
+    console.log("on blur...");
+    const { contactId, status, userId } = message.data;
     const eventData = {
       CreatedDate: Date.now(),
       CreatedById: userId,
-      Status__c: { string: status__c },
-      FirstName__c: { string: firstName },
-      LastName__c: { string: lastName },
+      Status__c: { string: status },
+      Contact_Id__c: { string: contactId },
     };
-    console.log("OUTPUT eventData : ", eventData);
+    console.log("eventData OUTPUT : ", eventData);
     await pubSubClient.publish("/event/Contact_Event__e", eventData);
   });
 }
